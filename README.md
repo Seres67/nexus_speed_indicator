@@ -1,6 +1,6 @@
-# Nexus Template
+# Nexus Speed Indicator
 
-A Nexus addon template.
+A Nexus addon that shows your current speed.
 
 ## License
 

@@ -13,10 +13,6 @@ void save(const std::filesystem::path &path);
 extern nlohmann::json json_settings;
 extern std::filesystem::path settings_path;
 extern std::mutex mutex;
-
-extern bool is_addon_enabled;
-
-extern const char *IS_ADDON_ENABLED;
 } // namespace Settings
 
 #endif // SETTINGS_HPP

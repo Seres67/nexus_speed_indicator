@@ -24,21 +24,21 @@ if (UNIX)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static -O2")
 endif ()
 
-project(nexus_template)
+project(nexus_speed_indicator)
 
 include_directories(include)
 
 # load imgui as a cmake project
 add_subdirectory(src/imgui)
 
-add_library(nexus_template SHARED src/main.cpp src/globals.cpp src/gui.cpp src/settings.cpp)
-target_link_libraries(nexus_template PRIVATE imgui)
-set_property(TARGET nexus_template PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+add_library(nexus_speed_indicator SHARED src/main.cpp src/globals.cpp src/gui.cpp src/settings.cpp)
+target_link_libraries(nexus_speed_indicator PRIVATE imgui)
+set_property(TARGET nexus_speed_indicator PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 # copy dll to game directory
-add_custom_command(TARGET nexus_template
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        $<TARGET_FILE:nexus_template>
-        "C:\\Games\\Guild Wars 2\\addons\\nexus_template.dll.update"
-        COMMENT "Copying nexus_template.dll.update to game directory"
-)
+#add_custom_command(TARGET nexus_speed_indicator
+#        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+#        $<TARGET_FILE:nexus_speed_indicator>
+#        "C:\\Games\\Guild Wars 2\\addons\\nexus_speed_indicator.dll.update"
+#        COMMENT "Copying nexus_speed_indicator.dll.update to game directory"
+#)
