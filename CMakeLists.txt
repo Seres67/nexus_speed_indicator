@@ -36,9 +36,9 @@ target_link_libraries(nexus_speed_indicator PRIVATE imgui)
 set_property(TARGET nexus_speed_indicator PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 # copy dll to game directory
-#add_custom_command(TARGET nexus_speed_indicator
-#        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-#        $<TARGET_FILE:nexus_speed_indicator>
-#        "C:\\Games\\Guild Wars 2\\addons\\nexus_speed_indicator.dll.update"
-#        COMMENT "Copying nexus_speed_indicator.dll.update to game directory"
-#)
+add_custom_command(TARGET nexus_speed_indicator
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        $<TARGET_FILE:nexus_speed_indicator>
+        "C:\\Games\\Guild Wars 2\\addons\\nexus_speed_indicator.dll.update"
+        COMMENT "Copying nexus_speed_indicator.dll.update to game directory"
+)

@@ -6,52 +6,94 @@
 bool tmp_open = true;
 Vector3 last_position = {};
 std::chrono::time_point<std::chrono::system_clock> last_time = std::chrono::system_clock::now();
-double speed_in_units_per_sec = 0;
-double speed_in_inches_per_sec = 0;
-double speed_in_mph = 0;
-int count = 0;
-Vector3 current_position = {};
+std::deque<std::pair<double, float>> speed_data; // Stores distance + time delta
+constexpr int POLLING_RATE = 30;
+constexpr double inches_per_mumble_unit = 100.0 / 2.54;
 
-constexpr double MOVEMENT_THRESHOLD = 0.002;
-constexpr double MIN_SPEED_DISPLAY = 1;
+double speed_2d;
+double speed_3d;
+
+double last_speed_2d;
+double last_speed_3d;
+
+double speed_in_game_per_sec;
+int zero_count = 0;
 
 void render_window()
 {
     ImGuiWindowFlags flags = ImGuiWindowFlags_NoCollapse;
     ImGui::SetNextWindowPos(ImVec2(300, 400), ImGuiCond_FirstUseEver);
     if (tmp_open && ImGui::Begin("Speed##SpeedIndicatorMainWindow", &tmp_open, flags)) {
-        current_position = mumble_link->AvatarPosition; //NOTE: this should be meters and game uses inches so we have to convert
-        auto current_time = std::chrono::system_clock::now();
-        auto time_span = std::chrono::duration<float>(current_time - last_time); // Time in seconds
-        if (time_span.count() >= 0.033f) {
-            Vector3 diff = {current_position.X - last_position.X, 0, current_position.Z - last_position.Z};
-            double distance_2d = std::hypot(diff.X, diff.Z);
-            if (distance_2d > MOVEMENT_THRESHOLD) {
-                count = 0;
-                double inches_per_game_unit = 100.0 / 2.54; // 1 game unit = 100 / 2.54 inches
-                double distance_in_inches = distance_2d * inches_per_game_unit;
-                double time_in_s = std::round(time_span.count() * 100) / 100;
-                speed_in_units_per_sec = distance_2d / time_in_s;
-                speed_in_inches_per_sec = distance_in_inches / time_in_s;
-                speed_in_mph = (speed_in_inches_per_sec * 3600) /
-                               63360; //NOTE: 1 mph = 63360 inches per hour (1 inch = 2.54 cm) & 1 hour = 3600 seconds
-                last_time = current_time;
-                last_position = current_position;
-            } else {
-                ++count;
-                if (count >= 10) {
-                    speed_in_units_per_sec = 0;
-                    speed_in_inches_per_sec = 0;
-                    speed_in_mph = 0;
-                    count = 0;
-                }
-            }
+        const auto current_time = std::chrono::system_clock::now();
+        const Vector3 current_position = mumble_link->AvatarPosition;
+        const auto time_span = std::chrono::duration<double>(current_time - last_time);
+        // if (const auto time_span = std::chrono::duration<float>(current_time - last_time);
+        //     time_span.count() >= 1.f / POLLING_RATE) {
+        double distance = std::hypot(current_position.X - last_position.X, current_position.Z - last_position.Z);
+        // double distance_3d = std::sqrt(std::pow(current_position.X - last_position.X, 2) +
+        // std::pow(current_position.Y - last_position.Y, 2) +
+        // std::pow(current_position.Z - last_position.Z, 2));
+
+        // Store distance and time
+        speed_data.emplace_back(distance, time_span.count());
+
+        if (speed_data.size() > POLLING_RATE)
+            speed_data.pop_front();
+
+        // Sum distances and times
+        double total_distance = 0.0;
+        double total_time = 0.0;
+        for (const auto &[dist, dt] : speed_data) {
+            total_distance += dist;
+            total_time += dt;
         }
-        ImGui::Text("Speed (u/s): %.0f\nSpeed (mph): %.0f",
-                    speed_in_units_per_sec < MIN_SPEED_DISPLAY ? 0 : std::round(speed_in_units_per_sec),
-                    speed_in_mph < MIN_SPEED_DISPLAY ? 0 : std::round(speed_in_mph));
+
+        // Convert units and calculate speed
+        constexpr double inches_per_mumble_unit = 100.0 / 2.54;
+        const double distance_in_game = total_distance * inches_per_mumble_unit;
+        speed_in_game_per_sec = (total_time > 0) ? (distance_in_game / total_time) : 0;
+
+        last_time = current_time;
+        last_position = current_position;
+        // }
+        ImGui::Text("Speed (u/s): %.0f", std::round(speed_in_game_per_sec));
         ImGui::End();
     }
 }
+
+// void render_window()
+// {
+//     ImGuiWindowFlags flags = ImGuiWindowFlags_NoCollapse;
+//     ImGui::SetNextWindowPos(ImVec2(300, 400), ImGuiCond_FirstUseEver);
+//     if (tmp_open && ImGui::Begin("Speed##SpeedIndicatorMainWindow", &tmp_open, flags)) {
+//         if (std::chrono::duration<float>(std::chrono::system_clock::now() - last_time).count() >= 1.f / POLLING_RATE)
+//         {
+//             const auto current_time = std::chrono::system_clock::now();
+//             const auto time_span = std::chrono::duration<float>(current_time - last_time);
+//             const auto time_in_s = std::round(time_span.count() * 100) / 100;
+//             const Vector3 current_position = mumble_link->AvatarPosition;
+//             const double distance = std::sqrt(std::pow(current_position.X - last_position.X, 2) +
+//                                               std::pow(current_position.Y - last_position.Y, 2) +
+//                                               std::pow(current_position.Z - last_position.Z, 2));
+//             const double distance_game = distance * inches_per_mumble_unit;
+//             speed_3d = distance_game / time_in_s;
+//             if (speed_3d == 0.0f) {
+//                 ++zero_count;
+//                 if (zero_count <= 7) {
+//                     speed_3d = last_speed_3d;
+//                     speed_2d = last_speed_2d;
+//                 }
+//             } else {
+//                 zero_count = 0;
+//                 last_speed_3d = speed_3d;
+//                 last_speed_2d = speed_2d;
+//             }
+//             last_time = current_time;
+//             last_position = current_position;
+//         }
+//         ImGui::Text("Speed 3D (u/s): %.0f", speed_3d);
+//         ImGui::End();
+//     }
+// }
 
 void render_options() {}

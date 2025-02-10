@@ -62,12 +62,14 @@ void addon_load(AddonAPI *api_p)
     if (std::filesystem::exists(Settings::settings_path)) {
         Settings::load(Settings::settings_path);
     }
+    speed_data.clear();
     api->Log(ELogLevel_INFO, addon_name, "addon loaded!");
 }
 
 void addon_unload()
 {
     api->Log(ELogLevel_INFO, addon_name, "unloading addon...");
+    speed_data.clear();
     api->Renderer.Deregister(addon_render);
     api->Renderer.Deregister(addon_options);
     api->Log(ELogLevel_INFO, addon_name, "addon unloaded!");
