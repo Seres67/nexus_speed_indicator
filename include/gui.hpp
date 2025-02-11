@@ -3,8 +3,6 @@
 
 #include <deque>
 
-extern std::deque<std::pair<double, float>> speed_data;
-
 void render_window();
 void render_options();
 
